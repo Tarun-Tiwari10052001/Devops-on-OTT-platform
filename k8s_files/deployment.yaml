@@ -2,22 +2,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pandacloud-app
+  name: tarunlablel
   labels:
-    app: pandacloud-app
+    app: tarunlablel
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pandacloud-app
+      app: tarunlablel
   template:
     metadata:
       labels:
-        app: pandacloud-app
+        app: tarunlablel
     spec:
       containers:
-      - name: pandacloud-container
-        image: 309395755719.dkr.ecr.us-east-1.amazonaws.com/amazon-prime:latest
+      - name: taruncontainer
+        image: ttiwari1005/Devops-on-OTT-platform
         ports:
         - containerPort: 3000
 ...
