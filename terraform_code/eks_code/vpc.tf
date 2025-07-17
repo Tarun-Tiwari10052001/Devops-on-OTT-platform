@@ -1,22 +1,58 @@
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "5.13.0"
+# networking.tf
+# -----------------------------
 
-  name = local.name
-  cidr = local.vpc_cidr
+locals {
+  eks_azs = ["ap-southeast-1a", "ap-southeast-1b"]
+}
 
-  azs             = local.azs
-  private_subnets = local.private_subnets
-  public_subnets  = local.public_subnets
-  intra_subnets   = local.intra_subnets
+data "aws_region" "current" {}
 
-  enable_nat_gateway = true
+resource "aws_vpc" "k8s-acc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 
-  public_subnet_tags = {
+  tags = {
+    Name = "eks-vpc"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+  }
+}
+
+resource "aws_subnet" "k8s-acc" {
+  count = length(local.eks_azs)
+
+  availability_zone       = local.eks_azs[count.index]
+  cidr_block              = "10.0.${count.index}.0/24"
+  vpc_id                  = aws_vpc.k8s-acc.id
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "eks-subnet-${count.index}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb" = 1
   }
+}
 
-  private_subnet_tags = {
-    "kubernetes.io/role/internal-elb" = 1
+resource "aws_internet_gateway" "k8s-acc" {
+  vpc_id = aws_vpc.k8s-acc.id
+
+  tags = {
+    Name = "eks-gateway"
   }
+}
+
+resource "aws_route_table" "k8s-acc" {
+  vpc_id = aws_vpc.k8s-acc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.k8s-acc.id
+  }
+}
+
+resource "aws_route_table_association" "k8s-acc" {
+  count = length(local.eks_azs)
+
+  subnet_id      = aws_subnet.k8s-acc[count.index].id
+  route_table_id = aws_route_table.k8s-acc.id
 }

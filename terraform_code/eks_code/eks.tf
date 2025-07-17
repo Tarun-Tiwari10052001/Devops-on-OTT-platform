@@ -1,39 +1,34 @@
-module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "19.15.1"
+#eks.tf
+resource "aws_eks_cluster" "k8s-acc" {
+  name     = var.cluster_name
+  version  = var.kubernetes_version
+  role_arn = aws_iam_role.k8s-acc-cluster.arn
 
-  cluster_name                   = local.name
-  cluster_endpoint_public_access = true
-
-  cluster_addons = {
-    coredns = {
-      most_recent = true
-    }
-    kube-proxy = {
-      most_recent = true
-    }
-    vpc-cni = {
-      most_recent = true
-    }
+  vpc_config {
+    subnet_ids = aws_subnet.k8s-acc[*].id
   }
 
-  vpc_id                   = module.vpc.vpc_id
-  subnet_ids               = module.vpc.private_subnets
+  depends_on = [
+    aws_iam_role_policy_attachment.k8s-acc-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.k8s-acc-AmazonEKSVPCResourceController
+  ]
+}
 
-  eks_managed_node_groups = {
-    tarun-node = {
-      min_size     = 2
-      max_size     = 4
-      desired_size = 2
+resource "aws_eks_node_group" "k8s-acc" {
+  cluster_name    = aws_eks_cluster.k8s-acc.name
+  node_group_name = var.cluster_name
+  node_role_arn   = aws_iam_role.k8s-acc-node.arn
+  subnet_ids      = aws_subnet.k8s-acc[*].id
 
-      instance_types = ["t2.medium"]
-      capacity_type  = "SPOT"
-
-      tags = {
-        ExtraTag = "tarun_Node"
-      }
-    }
+  scaling_config {
+    desired_size = 2
+    max_size     = 3
+    min_size     = 1
   }
 
-  tags = local.tags
+  depends_on = [
+    aws_iam_role_policy_attachment.k8s-acc-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.k8s-acc-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.k8s-acc-AmazonEC2ContainerRegistryReadOnly
+  ]
 }
