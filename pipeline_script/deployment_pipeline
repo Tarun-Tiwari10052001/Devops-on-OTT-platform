@@ -6,16 +6,16 @@ pipeline {
     }
 
     parameters {
-        string(name: 'CLUSTER_NAME', defaultValue: 'Devops-on-OTT-platform', description: 'Enter your EKS cluster name')
+        string(name: 'CLUSTER_NAME', defaultValue: 'EKS-1', description: 'Enter your EKS cluster name')
     }
 
     stages {
         stage("Login to EKS") {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'access-key', variable: 'AWS_ACCESS_KEY'),
-                                     string(credentialsId: 'secret-key', variable: 'AWS_SECRET_KEY')]) {
-                        sh "aws eks --region ap-south-1 update-kubeconfig --name ${params.CLUSTER_NAME}"
+                    withCredentials([string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY'),
+                                     string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_KEY')]) {
+                        sh "aws eks --region ap-southeast-1 update-kubeconfig --name ${params.CLUSTER_NAME}"
                     }
                 }
             }
