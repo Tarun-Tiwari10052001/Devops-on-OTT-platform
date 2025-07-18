@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: taruncontainer
-        image: ttiwari1005/Devops-on-OTT-platform
+        image: 560391603062.dkr.ecr.ap-southeast-1.amazonaws.com/ttiwari1005/project18:latest
         ports:
         - containerPort: 3000
 ...
