@@ -22,7 +22,7 @@ variable "volume_size" {
 
 variable "region_name" {
   description = "AWS Region"
-  default = "ap-south-1"
+  default = "ap-southeast-1"
   type        = string
 }
 
